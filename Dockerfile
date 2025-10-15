@@ -4,4 +4,4 @@ WORKDIR /app
 
 COPY . . 
 
-CMD ["python", "src/demo.py"]
+CMD ["python", "demo.py"]
