@@ -5,12 +5,12 @@ pipeline {
         string(name: 'name', defaultValue: 'venkatesh', description: 'Name to pass to Docker container')
     }
 
-    stages {
-        stage('Checkout Git Repo') {
-            steps {
-                bat 'git clone https://github.com/ABvenkatesh1718/Docker-Practice'
-            }
-        }
+stage('Checkout Git Repo') {
+    steps {
+        git url: 'https://github.com/ABvenkatesh1718/Docker-Practice'
+    }
+}
+
         
         stage('Build Docker Image') {
             steps {
