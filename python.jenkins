@@ -1,0 +1,50 @@
+pipeline {
+    agent any
+    
+    parameters {
+        string(name: 'NAME', defaultValue: 'venkatesh', description: 'Name to pass to Docker container')
+    }
+
+    stages {
+        stage('Checkout Git Repo') {
+            steps {
+                bat 'git clone https://github.com/ABvenkatesh1718/Docker-Practice'
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                bat 'docker build -t demo-app .'
+            }
+        }
+        
+        stage('Run Container & Copy Output') {
+            steps {
+                script {
+                    // Run container detached to get container id
+                    def containerId = bat(script: """
+                        docker run -d -e name=${params.NAME} demo-app
+                    """, returnStdout: true).trim()
+
+                    // Wait for container to finish
+                    bat "docker wait ${containerId}"
+
+                    // Create output folder on Jenkins workspace to copy files
+                    bat 'mkdir output'
+
+                    // Copy files from container /app/output to Jenkins workspace output folder
+                    bat "docker cp ${containerId}:/app/output/. output/"
+
+                    // Remove container
+                    bat "docker rm ${containerId}"
+                }
+            }
+        }
+        
+        stage('Archive Output Files') {
+            steps {
+                archiveArtifacts artifacts: 'output/**'
+            }
+        }
+    }
+}
