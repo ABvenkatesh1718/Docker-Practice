@@ -2,7 +2,7 @@ pipeline {
     agent any
     
     parameters {
-        string(name: 'NAME', defaultValue: 'venkatesh', description: 'Name to pass to Docker container')
+        string(name: 'name', defaultValue: 'venkatesh', description: 'Name to pass to Docker container')
     }
 
     stages {
@@ -21,22 +21,22 @@ pipeline {
         stage('Run Container & Copy Output') {
             steps {
                 script {
-                    // Run container detached to get container id
-                    def containerId = bat(script: """
-                        docker run -d -e name=${params.NAME} demo-app
-                    """, returnStdout: true).trim()
-
+                    def containerName = "python-container"
+                    
+                    // Remove existing container if exists
+                    bat "docker rm -f ${containerName} || exit 0"
+                    
+                    // Run container with passed name param (lowercase)
+                    bat "docker run --name ${containerName} -e name=${params.name} demo-app"
+                    
                     // Wait for container to finish
-                    bat "docker wait ${containerId}"
-
-                    // Create output folder on Jenkins workspace to copy files
-                    bat 'mkdir output'
-
-                    // Copy files from container /app/output to Jenkins workspace output folder
-                    bat "docker cp ${containerId}:/app/output/. output/"
-
-                    // Remove container
-                    bat "docker rm ${containerId}"
+                    bat "docker wait ${containerName}"
+                    
+                    // Copy output folder created by python script from container to workspace
+                    bat "docker cp ${containerName}:/app/output/. output/"
+                    
+                    // Remove container after copying output
+                    bat "docker rm ${containerName}"
                 }
             }
         }
